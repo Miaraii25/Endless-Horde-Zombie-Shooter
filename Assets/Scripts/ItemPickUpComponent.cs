@@ -7,14 +7,15 @@ public class ItemPickUpComponent : MonoBehaviour
     [SerializeField]
     ItemScript pickupItem;
 
-    [Tooltip("Manual override for drop amount, if left at -1 it will use the amount from the scriptable object")]
+    [Tooltip("Manual Override for drop amount, if left at -1 it will use the amount from the scriptable object")]
     [SerializeField]
     int amount = -1;
 
     [SerializeField] MeshRenderer propMeshRenderer;
     [SerializeField] MeshFilter propMeshFilter;
 
-    ItemScript ItemInstance;
+    ItemScript itemInstance;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,15 +24,19 @@ public class ItemPickUpComponent : MonoBehaviour
 
     private void InstantiateItem()
     {
-        ItemInstance = Instantiate(pickupItem);
+        itemInstance = Instantiate(pickupItem);
         if (amount > 0)
         {
-            ItemInstance.SetAmount(amount);
+            itemInstance.SetAmount(amount);
+        }
+        else
+        {
+            itemInstance.SetAmount(pickupItem.amountValue);
         }
         ApplyMesh();
     }
 
-    private void ApplyMesh()
+    void ApplyMesh()
     {
         if (propMeshFilter) propMeshFilter.mesh = pickupItem.itemPrefab.GetComponentInChildren<MeshFilter>().sharedMesh;
         if (propMeshRenderer) propMeshRenderer.materials = pickupItem.itemPrefab.GetComponentInChildren<MeshRenderer>().sharedMaterials;
@@ -42,8 +47,15 @@ public class ItemPickUpComponent : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         //add to inventory here
-        //get reference to player inventory, add item to it
+        //get reference to the player inventory, add item to it
 
+        InventoryComponent playerInventory = other.GetComponent<InventoryComponent>();
+
+        if (playerInventory) playerInventory.AddItem(itemInstance, amount);
+        if (itemInstance.itemCategory == ItemCategory.Weapon)
+        {
+            other.GetComponentInChildren<WeaponHolder>().equippedWeapon.weaponStats.totalBullets += pickupItem.amountValue;
+        }
         Destroy(gameObject);
     }
 }

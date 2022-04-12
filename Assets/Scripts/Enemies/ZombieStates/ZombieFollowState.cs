@@ -31,7 +31,7 @@ public class ZombieFollowState : ZombieStates
     public override void Update()
     {
         base.Update();
-        float moveZ = ownerZombie.zombieNavmeshAgent.velocity.normalized.z != 0f ? 1f : 0f;
+        float moveZ = ownerZombie.zombieNavmeshAgent.velocity.normalized.z != 0f ? 0.5f : 0f;
         ownerZombie.zombieAnimator.SetFloat(movementZHash, moveZ);
 
         float distanceBetween = Vector3.Distance(ownerZombie.transform.position, followTarget.transform.position);

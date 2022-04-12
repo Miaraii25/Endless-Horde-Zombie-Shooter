@@ -9,13 +9,14 @@ public enum WeaponType
 
 public enum WeaponFiringPattern
 {
-    SemiAuto, FullAuto, ThreeShotBurst, FiveShotBurst
+    SemiAuto, FullAuto, ThreeShotBurst, FiveShotBurst, PumpAction
 }
 
 [System.Serializable]
 public struct WeaponStats
 {
     public WeaponType weaponType;
+    public WeaponFiringPattern firingPattern;
     public string weaponName;
     public float damage;
     public int bulletsInClip;
@@ -70,11 +71,23 @@ public class WeaponComponent : MonoBehaviour
     }
 
     //decide whether it is automatic or semi-automatic here
+    public void Initialize(WeaponHolder _weaponHolder, WeaponScriptable weaponScriptable)
+    {
+        weaponHolder = _weaponHolder;
+
+        if (weaponScriptable)
+        {
+            weaponStats = weaponScriptable.weaponStats;
+        }
+    }
+
     public virtual void StartFiringWeapon()
     {
         isFiring = true;
         if (weaponStats.repeating)
         {
+            //fire weapon
+            CancelInvoke(nameof(FireWeapon));
             InvokeRepeating(nameof(FireWeapon), weaponStats.fireStartDelay, weaponStats.fireRate);
         }
         else
@@ -119,17 +132,16 @@ public class WeaponComponent : MonoBehaviour
         }
         // if there's a firing effect, hide it here
 
-        int bulletsToReload = weaponStats.totalBullets - (weaponStats.clipSize - weaponStats.bulletsInClip);
+        int bulletsToReload = weaponStats.clipSize - weaponStats.totalBullets;
 
-        // -------------- COD style reload, subtract bullets ----------------------
-        if (bulletsToReload > 0)
+        if (bulletsToReload < 0)
         {
-            weaponStats.totalBullets = bulletsToReload;
+            weaponStats.totalBullets -= (weaponStats.clipSize - weaponStats.bulletsInClip);
             weaponStats.bulletsInClip = weaponStats.clipSize;
         }
         else
         {
-            weaponStats.bulletsInClip += weaponStats.totalBullets;
+            weaponStats.bulletsInClip = weaponStats.totalBullets;
             weaponStats.totalBullets = 0;
         }
 

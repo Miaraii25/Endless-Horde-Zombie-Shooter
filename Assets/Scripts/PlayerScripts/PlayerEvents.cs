@@ -17,7 +17,7 @@ public class PlayerEvents
 
     public static event OnHealthInitializeEvent OnHealthInitialized;
 
-    public static void Invoke_OnHealthInitialized(HealthComponent healthComponent)
+    public static void InvokeOnHealthInitialized(HealthComponent healthComponent)
     {
         OnHealthInitialized?.Invoke(healthComponent);
     }

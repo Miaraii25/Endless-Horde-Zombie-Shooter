@@ -9,111 +9,161 @@ public class WeaponHolder : MonoBehaviour
     GameObject weaponToSpawn;
 
     public PlayerController playerController;
-    Animator animator;
-    Sprite crosshairImage;
-    WeaponComponent equippedWeapon;
+    Animator playerAnimator;
+    public Sprite crossHairImage;
+    public WeaponComponent equippedWeapon;
 
     [SerializeField]
     GameObject weaponSocketLocation;
     [SerializeField]
     Transform gripIKSocketLocation;
 
-    bool wasFiring = false;
+    GameObject spawnedWeapon;
+
     bool firingPressed = false;
 
+    public WeaponScriptable startingWeaponScriptable;
+    public WeaponAmmoUI weaponAmmoUI;
+
+    public readonly int isFiringHash = Animator.StringToHash("isFiring");
+    public readonly int isReloadingHash = Animator.StringToHash("isReloading");
     // Start is called before the first frame update
-    public readonly int isFiringHash = Animator.StringToHash("IsFiring");
-    public readonly int isReloadingHash = Animator.StringToHash("IsReloading");
     void Start()
     {
         playerController = GetComponent<PlayerController>();
-        animator = GetComponent<Animator>();
-        GameObject spawnedWeapon = Instantiate(weaponToSpawn, weaponSocketLocation.transform.position, weaponSocketLocation.transform.rotation, weaponSocketLocation.transform);
+        playerAnimator = GetComponent<Animator>();
+        playerController.inventory.AddItem(startingWeaponScriptable, 1);
+        //EquipWeapon(startingWeaponScriptable);
 
-        equippedWeapon = spawnedWeapon.GetComponent<WeaponComponent>();
-        equippedWeapon.Initialize(this);
-        PlayerEvents.InvokeOnWeaponEquipped(equippedWeapon);
+        //spawnedWeapon = Instantiate(weaponToSpawn, weaponSocketLocation.transform.position, weaponSocketLocation.transform.rotation, weaponSocketLocation.transform);
 
-        gripIKSocketLocation = equippedWeapon.gripLocation;
+        //startingWeaponScriptable.UseItem(playerController);
 
+        //equippedWeapon = spawnedWeapon.GetComponent<WeaponComponent>();
+        //equippedWeapon.Initialize(this, startingWeaponScriptable);
+
+        //PlayerEvents.InvokeOnWeaponEquipped(equippedWeapon);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
-    }
-    private void OnAnimatorIK(int layerIndex)
-    {
-        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
-        animator.SetIKPosition(AvatarIKGoal.LeftHand, gripIKSocketLocation.transform.position);
+
     }
 
+    private void OnAnimatorIK(int layerIndex)
+    {
+        if (!playerController.isReloading && equippedWeapon)
+        {
+            playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
+            playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand, gripIKSocketLocation.transform.position);
+
+        }
+
+    }
     public void OnFire(InputValue value)
     {
         firingPressed = value.isPressed;
-        
+        if (!equippedWeapon) return;
         if (firingPressed)
         {
             StartFiring();
         }
         else
         {
-            //print("Stopping firing");
             StopFiring();
         }
-
     }
 
-    public void StartFiring()
+    void StartFiring()
     {
+
         if (equippedWeapon.weaponStats.bulletsInClip <= 0)
         {
             StartReloading();
             return;
         }
-        animator.SetBool(isFiringHash, true);
+
+        playerAnimator.SetBool(isFiringHash, true);
         playerController.isFiring = true;
         equippedWeapon.StartFiringWeapon();
+
     }
-    public void StopFiring()
+
+    void StopFiring()
     {
+        playerAnimator.SetBool(isFiringHash, false);
         playerController.isFiring = false;
-        animator.SetBool(isFiringHash, false);
         equippedWeapon.StopFiringWeapon();
     }
-    //input based reload
+
     public void OnReload(InputValue value)
     {
-        playerController.isReloading = value.isPressed;        
+        playerController.isReloading = value.isPressed;
         StartReloading();
     }
 
-    //the action of reloading
     public void StartReloading()
     {
+        if (!equippedWeapon) return;
         if (equippedWeapon.isReloading || equippedWeapon.weaponStats.bulletsInClip == equippedWeapon.weaponStats.clipSize) return;
-
 
         if (playerController.isFiring)
         {
             StopFiring();
         }
-        if (equippedWeapon.weaponStats.totalBullets <= 0) return;
+        if (equippedWeapon.weaponStats.totalBullets <= 0)
+        {
+            return;
+        }
 
-        animator.SetBool(isReloadingHash, true);
+        //refill ammo here
         equippedWeapon.StartReloading();
+        playerController.isReloading = true;
+        playerAnimator.SetBool(isReloadingHash, true);
 
         InvokeRepeating(nameof(StopReloading), 0, 0.1f);
     }
 
-    public void StopReloading() 
+    public void StopReloading()
     {
-        if (animator.GetBool(isReloadingHash)) return;
+        if (playerAnimator.GetBool(isReloadingHash)) return;
 
         playerController.isReloading = false;
+        playerAnimator.SetBool(isReloadingHash, false);
         equippedWeapon.StopReloading();
-        animator.SetBool(isReloadingHash, false);
         CancelInvoke(nameof(StopReloading));
+
+        if (firingPressed)
+        {
+            StartFiring();
+        }
+    }
+
+    public void EquipWeapon(WeaponScriptable weaponScriptable)
+    {
+        if (!weaponScriptable) return;
+        spawnedWeapon = Instantiate(weaponScriptable.itemPrefab, weaponSocketLocation.transform.position, weaponSocketLocation.transform.rotation, weaponSocketLocation.transform);
+        if (!spawnedWeapon) return;
+
+        equippedWeapon = spawnedWeapon.GetComponent<WeaponComponent>();
+        if (!equippedWeapon) return;
+
+        equippedWeapon.Initialize(this, weaponScriptable);
+        PlayerEvents.InvokeOnWeaponEquipped(equippedWeapon);
+        gripIKSocketLocation = equippedWeapon.gripLocation;
+
+        weaponAmmoUI.OnWeaponEquipped(equippedWeapon);
+
+        //do ik stuff here if other weapons are one handed, etc.
+        //set stuff in animator for other weapon
+    }
+
+    public void UnEquipWeapon()
+    {
+        if (!equippedWeapon) return;
+
+        Destroy(equippedWeapon.gameObject);
+        equippedWeapon = null;
     }
 }

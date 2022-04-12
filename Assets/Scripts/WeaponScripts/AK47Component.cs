@@ -40,6 +40,8 @@ public class AK47Component : WeaponComponent
     {
         IDamageable damageable = hitInfo.collider.GetComponent<IDamageable>();
         damageable?.TakeDamage(weaponStats.damage);
+
+
     }
 
     private void OnDrawGizmos()

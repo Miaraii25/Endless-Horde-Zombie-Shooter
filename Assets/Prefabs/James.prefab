@@ -1530,7 +1530,7 @@ GameObject:
   - component: {fileID: 6595714557197881410}
   m_Layer: 0
   m_Name: James
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1584,7 +1584,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 31fce97398f952f4089a92f05249e7ff, type: 3}
+  m_Actions: {fileID: -944628639613478452, guid: 7163026ecd17939419babfec798a2214, type: 3}
   m_NotificationBehavior: 1
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
@@ -1628,6 +1628,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 598f9550fc6bc4a48852c75daab6533f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentHealth: 250
+  maxHealth: 250
 --- !u!114 &7674921957238207793
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1645,6 +1647,7 @@ MonoBehaviour:
   isJumping: 0
   isRunning: 0
   isAiming: 0
+  inventory: {fileID: 0}
 --- !u!114 &3362876029045719028
 MonoBehaviour:
   m_ObjectHideFlags: 0
